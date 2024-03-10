@@ -1,15 +1,20 @@
-import dayjs from 'dayjs'
-import utc from 'dayjs/plugin/utc.js'
+const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
 
 dayjs.extend(utc)
 
-export const selfDayjs = (time) => {
+const selfDayjs = (time) => {
   // Convert time to UTC+8 for China Standard Time
   return dayjs(time).utcOffset(8, true)
 }
 
 
-export const timeZone = () => {
+const timeZone = () => {
   //Guess the time zone of the current environment,
   return dayjs.tz.guess()
+}
+
+module.exports = {
+  selfDayjs,
+  timeZone
 }

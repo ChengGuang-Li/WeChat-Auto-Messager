@@ -1,4 +1,5 @@
-import USER_CONFIG from './index.cjs'
+const USER_CONFIG = require('./index.js');
 
-const config = process.env.USER_INFO ? /* istanbul ignore next */ JSON.parse(process.env.USER_INFO) : USER_CONFIG
-export default config
+const config = process.env.USER_INFO ? /* istanbul ignore next */ JSON.parse(process.env.USER_INFO) : USER_CONFIG;
+
+module.exports = config;

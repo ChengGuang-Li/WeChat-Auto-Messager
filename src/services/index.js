@@ -1,21 +1,28 @@
-import axios from "axios";
-import dayjs from "dayjs";
-import {
+const axios = require("axios");
+const dayjs = require("dayjs");
+const {
   getConstellation,
   randomNum,
   sortBirthdayTime,
   getColor,
   toLowerLine,
   sleep,
-} from "../utils/index.js";
-import config from "../config/exp-config.js";
-import countryMap from "../config/countries.js";
+  parseWeatherData,
+} = require("../utils/index.js");
+const config = require("../config/exp-config.js");
+const countryMap = require("../config/countries.js");
+const {
+  updateDocById,
+  getDocInfoById,
+  getAllDocInfo,
+} = require("./firestore/index.js");
+const { selfDayjs, timeZone } = require("../utils/timezone-helper.js");
 
 /**
  * get WeChat accessToken
  * @returns accessToken
  */
-export const getAccessToken = async () => {
+const getAccessToken = async () => {
   // APP_ID
   const appId = process.env.APP_ID;
   // APP_SECRET
@@ -56,7 +63,7 @@ export const getAccessToken = async () => {
  * @param {*} weather
  * @returns
  */
-export const getWeatherIcon = (weather) => {
+const getWeatherIcon = (weather) => {
   let weatherIcon = "🌈";
   const weatherIconList = [
     "☀️",
@@ -100,7 +107,7 @@ export const getWeatherIcon = (weather) => {
  * @param {*} countryName
  * @returns
  */
-export const getCityCode = async (cityName, countryName) => {
+const getCityCode = async (cityName, countryName) => {
   const url = `https://geoapi.qweather.com/v2/city/lookup?location=${cityName}&key=${config.weatherApiKey}`;
   const res = await axios
     .get(url, {
@@ -112,14 +119,12 @@ export const getCityCode = async (cityName, countryName) => {
   if (res.status == 200 && res.data && res.data.code == 200) {
     const countryName_CN = countryMap[countryName.toLowerCase()];
 
-    const cityCode = res.data.location.forEach((location) => {
-      if (location.country.includes(countryName_CN)) {
-        return location.id;
-      }
+    const location = res.data.location.find((location) => {
+      return location.country.includes(countryName_CN);
     });
-
-    return cityCode;
+    return location.id;
   }
+
   console.log(`Get the City Code Failed: ${res}`);
   return null;
 };
@@ -129,7 +134,7 @@ export const getCityCode = async (cityName, countryName) => {
  * @param {*} cityCode
  * @returns
  */
-export const getCityWeather = async (cityCode) => {
+const getCityWeather = async (cityCode) => {
   const url = `https://devapi.qweather.com/v7/weather/24h?location=${cityCode}&key=${config.weatherApiKey}`;
   const res = await axios
     .get(url, {
@@ -151,10 +156,8 @@ export const getCityWeather = async (cityCode) => {
  * @params {*} customizedDate
  * @returns
  */
-export const getDateDiffList = (customizedDate) => {
-  const dayDiff = helperModule
-    .selfDayjs()
-    .diff(helperModule.selfDayjs(customizedDate), "day", true);
+const getDateDiff = (customizedDate) => {
+  const dayDiff = selfDayjs().diff(selfDayjs(customizedDate), "day", true);
 
   let diffDay = Math.ceil(dayDiff);
   if (diffDay <= 0) {
@@ -165,10 +168,10 @@ export const getDateDiffList = (customizedDate) => {
 
 /**
  * Get important days information
- * @param {*} festivals 
- * @returns 
+ * @param {array} festivals
+ * @returns
  */
-export const getImportantDaysMessage = (festivals) => {
+const getImportantDaysMessage = (festivals) => {
   if (
     Object.prototype.toString.call(festivals) !== "[object Array]" ||
     festivals.length === 0
@@ -218,4 +221,115 @@ export const getImportantDaysMessage = (festivals) => {
   return resMessage;
 };
 
+/**
+ * How long until the next period time
+ *
+ * @param {String} date
+ */
+const getPeriodTime = (date) => {
+  const dateDiff = getDateDiff(date);
+  let leftDay = 28 - parseInt(dateDiff);
+  return leftDay;
+};
 
+/**
+ * Get the period time message
+ * @param {*} date
+ */
+const getPeriodTimeMessage = async (user, currentDate) => {
+  const date = getPeriodTime(user.data.period_time);
+
+  if (date == "1" || date == "2") {
+    return `宝贝下次例假还有 ${date} 天，出门注意 包里放卫生巾, 注意早点休息`;
+  } else if (date == "27") {
+    return "今天是宝贝例假第二天，注意多休息, 开心最重要";
+  } else if (date == "0") {
+    //update period history of the user
+    //update period time  of the user
+    let dataNew = user.data;
+    dataNew.period_time = currentDate;
+    dataNew.period_history.push(currentDate);
+    await updateDocById("users", user.userId, dataNew);
+    return "今天是宝贝例假第一天，注意多休息，宝贝肚子不舒服就给我说，出门注意 包里放卫生巾";
+  } else {
+    return `距离下一次姨妈期还有 ${date}天`;
+  }
+};
+
+/**
+ * Aggregated the data
+ *
+ */
+const getAggregatedData = async () => {
+  //Got the User Info
+  debugger;
+  const users = await getAllDocInfo("users");
+  console.log(users);
+
+  for (user of users) {
+    //get the city code
+    const cityName = user.data.city;
+    const countryName = user.data.country;
+    const cityCode = await getCityCode(cityName, countryName);
+    let weatherInfo = [];
+    if (cityCode) {
+      //get the 24h weather info
+      const weatherHourly = await getCityWeather(cityCode);
+      weatherInfo = parseWeatherData(weatherHourly);
+    }
+    //get the period time
+    const currentDate = dayjs().format("YYYY-MM-DD");
+    const periodMessage = await getPeriodTimeMessage(user, currentDate);
+    //get the festivals
+    const importantDays = [user.data.birthday, user.data.anniversary];
+    const importantDayMessage = getImportantDaysMessage(importantDays);
+
+    //love day
+    const loveDayMessage = `今天是我们念爱的第${getDateDiff(
+      user.data.love_day
+    )}天`;
+
+    const temp = weatherInfo[0].temp + "°C";
+    const humidity = weatherInfo[0].humidity + "%";
+
+    //aggregate messages
+    const wxTemplateParams = [
+      { name: "period_time", value: periodMessage, color: getColor() },
+      {
+        name: "anniversary_day",
+        value: importantDayMessage[1],
+        color: getColor(),
+      },
+      {
+        name: "birthday_day",
+        value: importantDayMessage[0],
+        color: getColor(),
+      },
+      { name: "city", value: cityName, color: getColor() },
+      { name: "love_day", value: loveDayMessage, color: getColor() },
+      { name: "temp", value: temp, color: getColor() },
+      { name: "humidity", value: humidity, color: getColor() },
+      {
+        name: "weather_condition",
+        value: weatherInfo[0].text,
+        color: getColor(),
+      },
+    ];
+    console.log(wxTemplateParams, "wxTemplateParams");
+    user.wxTemplateParams = wxTemplateParams;
+  }
+
+  return users;
+};
+
+module.exports = {
+  getAccessToken,
+  getWeatherIcon,
+  getCityCode,
+  getCityWeather,
+  getDateDiff,
+  getImportantDaysMessage,
+  getPeriodTime,
+  getPeriodTimeMessage,
+  getAggregatedData
+};
