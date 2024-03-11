@@ -1,7 +1,7 @@
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore, Timestamp, FieldValue, Filter } = require('firebase-admin/firestore');
 
-const serviceAccount = process.env.FIRESTORE_KEY;
+const serviceAccount = JSON.parse(process.env.FIRESTORE_KEY);
 //const serviceAccount = require('../../config/wechat-auto-messager-ce090e1fdbbc.json')
 
 
