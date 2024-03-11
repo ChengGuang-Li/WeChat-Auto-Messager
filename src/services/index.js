@@ -190,12 +190,12 @@ const getImportantDaysMessage = (festivals) => {
   });
 
   //response messages
-  let resMessage = [];
+  const map = new Map();
   importantDayList.forEach((item, index) => {
     let message = null;
 
     // Birthday
-    if (item.type === "Birthday") {
+    if (item.type === "Birthday") { 
       if (item.diffDay === 0) {
         message = `今天是${item.name}的生日哦，祝${item.name}生日快乐!!!`;
       } else {
@@ -203,8 +203,8 @@ const getImportantDaysMessage = (festivals) => {
       }
     }
 
-    // festivals
-    if (item.type === "Festivals") {
+    // Anniversary
+    if (item.type === "Anniversary") {
       if (item.diffDay === 0) {
         message = `今天是${item.name}哦，要永远开心！`;
       } else {
@@ -214,11 +214,11 @@ const getImportantDaysMessage = (festivals) => {
 
     // save message
     if (message) {
-      resMessage.push(message);
+      map.set(item.type,message);
     }
   });
 
-  return resMessage;
+  return map;
 };
 
 /**
@@ -271,20 +271,21 @@ const getAggregatedData = async () => {
     //get the city code
     const cityName = user.data.city;
     const countryName = user.data.country;
-    const cityCode = await getCityCode(cityName, countryName);
+    const cityCode = await getCityCode(cityName, countryName); 
     let weatherInfo = [];
     if (cityCode) {
       //get the 24h weather info
       const weatherHourly = await getCityWeather(cityCode);
-      weatherInfo = parseWeatherData(weatherHourly);
+      weatherInfo = parseWeatherData(weatherHourly);   //24H weather Message
     }
     //get the period time
     const currentDate = dayjs().format("YYYY-MM-DD");
-    const periodMessage = await getPeriodTimeMessage(user, currentDate);
+    const periodMessage = await getPeriodTimeMessage(user, currentDate); // Period Message
     //get the festivals
     const importantDays = [user.data.birthday, user.data.anniversary];
     const importantDayMessage = getImportantDaysMessage(importantDays);
-
+    const birthdayMessage = importantDayMessage.get("Birthday");    //Birthday Message
+    const anniversaryMessage = importantDayMessage.get("Anniversary"); //Anniversary Message
     //love day
     const loveDayMessage = `今天是我们念爱的第${getDateDiff(
       user.data.love_day
@@ -299,12 +300,12 @@ const getAggregatedData = async () => {
       { name: "period_time", value: periodMessage, color: getColor() },
       {
         name: "anniversary_day",
-        value: importantDayMessage[1],
+        value: anniversaryMessage,
         color: getColor(),
       },
       {
         name: "birthday_day",
-        value: importantDayMessage[0],
+        value: birthdayMessage,
         color: getColor(),
       },
       { name: "city", value: cityMessage, color: getColor() },
