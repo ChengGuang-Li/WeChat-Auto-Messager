@@ -134,7 +134,8 @@ const getCityCode = async (cityName, countryName) => {
  * @returns
  */
 const getCityWeather = async (cityCode) => {
-  const url = `https://devapi.qweather.com/v7/weather/24h?location=${cityCode}&key=${config.weatherApiKey}`;
+  const weatherApiKey = process.env.WEATHER_KEY;
+  const url = `https://devapi.qweather.com/v7/weather/24h?location=${cityCode}&key=${weatherApiKey}`;
   const res = await axios
     .get(url, {
       headers: {
