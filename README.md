@@ -4,18 +4,22 @@ This small program sends daily messages to couples on a schedule. It includes re
 
 
 
-This project involves refactoring an [old project](https://github.com/ChengGuang-Li/wechat-love-push)   that has been running steadily for 471 days, while also adding new functionalities.
+___
+
+This is an upgrade to a [WeChat couple messaging project](https://github.com/ChengGuang-Li/wechat-love-push)  that has been running steadily for 471 days, addressing pain points from the old project while also introducing new features.
 
 The following are screenshots of the old project： 
 
+| Message Content Example                                      | Notification Delivery Feedback Example                       |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| <img src="./resources/content.jpg" width="300px" height="400px"> | <img src="./resources/result.jpg" width="300px" height="200px"> |
 
-<div style="display:flex; justify-content: center; align-items: center;">
-<div style="margin: 0 auto;">
-  <img src="./resources/content.jpg" width="300px" height="400px">
-  <p style="text-align:center;"> Message Content Example</p>
-</div>
-<div style="margin: 0 auto;">
-  <img src="./resources/result.jpg" width="300px" height="200px">
-  <p style="text-align:center;">Notification Delivery Feedback Example</p>
-</div>
-</div>
+| Functions                                    | Old Version | New Version |
+| -------------------------------------------- | ----------- | ----------- |
+| Send daily scheduled WeChat messages         | ✅           | ✅           |
+| Dynamic configuration of user data           | ❌           | ✅           |
+| Connect to Cloud Database                    | ❌           | ✅           |
+| Display 24-hour weather forecast information | ❌           | ⏳           |
+| Send Email Message                           | ❌           | ⏳           |
+| Display period tracking chart                | ❌           | ⏳           |
+
