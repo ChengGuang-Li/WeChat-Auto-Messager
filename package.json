@@ -2,9 +2,10 @@
   "name": "wechat-auto-messager",
   "description": "This small program sends daily messages to couples on a schedule. It includes reminders for important anniversary dates, birthdays, and weather updates. Additionally, it offers customizable message templates. The purpose is to reduce arguments caused by forgetting important dates and to enhance the relationship between couples.",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "main.js",
+  "type": "commonjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "cross-env APP_MODE=prod node main.js"
   },
   "repository": {
     "type": "git",

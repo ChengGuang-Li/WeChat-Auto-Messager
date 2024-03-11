@@ -1,8 +1,8 @@
-const { initializeApp, applicationDefault, cert } = require('firebase-admin/app');
+const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore, Timestamp, FieldValue, Filter } = require('firebase-admin/firestore');
 
-// const serviceAccount = env.firestore_key;
-const serviceAccount = require('../../config/wechat-auto-messager-ce090e1fdbbc.json')
+const serviceAccount = process.env.FIRESTORE_KEY;
+//const serviceAccount = require('../../config/wechat-auto-messager-ce090e1fdbbc.json')
 
 
 console.log(`Firestore Key: ${serviceAccount}`);
@@ -20,8 +20,8 @@ const db = getFirestore();
  * @returns 
  */
 const addNewDoc = async (collectionId,userObj) =>{
-    const docRef = db.collection(collectionId).doc(`${userObj.email}`);
-    const res = await docRef.set(userObj);
+    const docRef = db.collection(collectionId).doc(`${userObj.data.email}`);
+    const res = await docRef.set(userObj.data);
     return res
 }
 
