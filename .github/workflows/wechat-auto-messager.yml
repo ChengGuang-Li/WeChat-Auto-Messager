@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
   schedule:
     # Start the task at 7:30 AM Melbourne time.
-    - cron: '30 9 * * *'
+    - cron: '30 20 * * *'
     
 jobs:
   build:
