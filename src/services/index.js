@@ -238,11 +238,11 @@ const getPeriodTime = (date) => {
 const getPeriodTimeMessage = async (user, currentDate) => {
 	const date = getPeriodTime(user.data.period_time);
 
-	if (date == "1" || date == "2") {
+	if (date == 1 || date == 2) {
 		return `宝贝下次例假还有 ${date} 天，出门注意包里放卫生巾, 注意早点休息`;
-	} else if (date == "27") {
+	} else if (date == 27) {
 		return "今天是宝贝例假第二天，注意多休息, 开心最重要";
-	} else if (date == "0") {
+	} else if (date <= 0) {
 		//update period history of the user
 		//update period time  of the user
 		let dataNew = user.data;
